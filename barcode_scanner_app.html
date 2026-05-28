@@ -1,0 +1,202 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+#app { padding: 1rem; max-width: 380px; margin: 0 auto; }
+h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1rem; }
+#video-container { position: relative; width: 100%; border-radius: var(--border-radius-lg); overflow: hidden; background: #000; display: none; }
+#video { width: 100%; display: block; }
+#scan-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.scan-frame { width: 220px; height: 120px; border: 2px solid #fff; border-radius: 8px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.4); }
+.scan-line { position: absolute; width: 200px; height: 2px; background: rgba(255,80,80,0.85); animation: scanAnim 1.5s linear infinite; }
+@keyframes scanAnim { 0%{top:calc(50% - 55px)} 100%{top:calc(50% + 55px)} }
+#status { font-size: 13px; color: var(--color-text-secondary); text-align: center; margin: 8px 0; min-height: 20px; }
+.btn { width: 100%; padding: 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); font-size: 15px; font-weight: 500; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-primary); margin-bottom: 8px; }
+.btn-primary { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.btn-danger { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
+.btn-success { background: var(--color-background-success); color: var(--color-text-success); border-color: var(--color-border-success); }
+#list-section { margin-top: 1rem; }
+.list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.list-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.count-badge { font-size: 12px; background: var(--color-background-secondary); color: var(--color-text-secondary); padding: 2px 8px; border-radius: 999px; border: 0.5px solid var(--color-border-tertiary); }
+#code-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+.code-item { display: flex; align-items: center; justify-content: space-between; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 8px 12px; }
+.code-text { font-size: 14px; font-family: var(--font-mono); color: var(--color-text-primary); }
+.code-num { font-size: 12px; color: var(--color-text-tertiary); margin-right: 8px; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 18px; padding: 0 4px; line-height: 1; }
+.del-btn:hover { color: var(--color-text-danger); }
+#empty-state { text-align: center; color: var(--color-text-tertiary); font-size: 14px; padding: 2rem 0; }
+#manual-row { display: flex; gap: 8px; margin-bottom: 8px; }
+#manual-input { flex: 1; padding: 10px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); font-size: 14px; background: var(--color-background-primary); color: var(--color-text-primary); }
+#manual-add { padding: 10px 16px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 14px; cursor: pointer; white-space: nowrap; }
+</style>
+
+<div id="app">
+  <h2><i class="ti ti-barcode" aria-hidden="true"></i> バーコードスキャナー</h2>
+
+  <div id="video-container">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="scan-overlay">
+      <div class="scan-frame"></div>
+      <div class="scan-line"></div>
+    </div>
+  </div>
+
+  <div id="status">スキャンボタンを押してください</div>
+
+  <button class="btn btn-primary" id="scan-btn" onclick="startScan()">
+    <i class="ti ti-camera" aria-hidden="true"></i> スキャン開始
+  </button>
+  <button class="btn" id="stop-btn" onclick="stopScan()" style="display:none">
+    <i class="ti ti-player-stop" aria-hidden="true"></i> スキャン停止
+  </button>
+
+  <div id="manual-row">
+    <input id="manual-input" type="number" placeholder="手動入力（13桁）" maxlength="13" />
+    <button id="manual-add" onclick="manualAdd()">追加</button>
+  </div>
+
+  <div id="list-section">
+    <div class="list-header">
+      <span class="list-title">読み取りリスト</span>
+      <span class="count-badge" id="count-badge">0件</span>
+    </div>
+    <div id="code-list">
+      <div id="empty-state"><i class="ti ti-qrcode" aria-hidden="true"></i><br>まだコードがありません</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem; display:flex; gap:8px;">
+    <button class="btn btn-danger" style="flex:1" onclick="clearAll()">
+      <i class="ti ti-trash" aria-hidden="true"></i> クリア
+    </button>
+    <button class="btn btn-success" style="flex:1" onclick="downloadCSV()">
+      <i class="ti ti-download" aria-hidden="true"></i> CSV保存
+    </button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+let codes = [];
+let codeReader = null;
+let scanning = false;
+
+function updateList() {
+  const list = document.getElementById('code-list');
+  const badge = document.getElementById('count-badge');
+  badge.textContent = codes.length + '件';
+  if (codes.length === 0) {
+    list.innerHTML = '<div id="empty-state"><i class="ti ti-qrcode" aria-hidden="true"></i><br>まだコードがありません</div>';
+    return;
+  }
+  list.innerHTML = codes.map((c, i) => `
+    <div class="code-item">
+      <span class="code-num">${i+1}</span>
+      <span class="code-text">${c}</span>
+      <button class="del-btn" onclick="removeCode(${i})" aria-label="削除">×</button>
+    </div>
+  `).join('');
+}
+
+function addCode(code) {
+  const clean = code.replace(/\D/g, '');
+  if (clean.length < 8) return;
+  if (codes.includes(clean)) {
+    setStatus('⚠ 重複: ' + clean);
+    return;
+  }
+  codes.push(clean);
+  updateList();
+  setStatus('✓ 追加: ' + clean);
+  try { if(window.AudioContext || window.webkitAudioContext) beep(); } catch(e){}
+}
+
+function removeCode(i) {
+  codes.splice(i, 1);
+  updateList();
+}
+
+function clearAll() {
+  if (codes.length === 0) return;
+  if (confirm('リストをクリアしますか？')) { codes = []; updateList(); setStatus('クリアしました'); }
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+function manualAdd() {
+  const val = document.getElementById('manual-input').value.trim();
+  if (val) { addCode(val); document.getElementById('manual-input').value = ''; }
+}
+
+async function startScan() {
+  try {
+    if (!window.ZXing) { setStatus('ライブラリ読み込み中...'); await new Promise(r=>setTimeout(r,1500)); }
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+    const backCamera = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length-1] || devices[0];
+    if (!backCamera) { setStatus('カメラが見つかりません'); return; }
+
+    document.getElementById('video-container').style.display = 'block';
+    document.getElementById('scan-btn').style.display = 'none';
+    document.getElementById('stop-btn').style.display = 'block';
+    setStatus('バーコードを枠内に合わせてください');
+    scanning = true;
+
+    let lastCode = '';
+    let lastTime = 0;
+    await codeReader.decodeFromVideoDevice(backCamera.deviceId, 'video', (result, err) => {
+      if (result) {
+        const now = Date.now();
+        if (result.text !== lastCode || now - lastTime > 2000) {
+          lastCode = result.text;
+          lastTime = now;
+          addCode(result.text);
+        }
+      }
+    });
+  } catch(e) {
+    setStatus('カメラエラー: ' + (e.message || 'アクセスを許可してください'));
+    stopScan();
+  }
+}
+
+function stopScan() {
+  if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
+  scanning = false;
+  document.getElementById('video-container').style.display = 'none';
+  document.getElementById('scan-btn').style.display = 'block';
+  document.getElementById('stop-btn').style.display = 'none';
+  setStatus('スキャン停止しました');
+}
+
+function downloadCSV() {
+  if (codes.length === 0) { alert('コードがありません'); return; }
+  const header = '商品コード\n';
+  const rows = codes.join('\n');
+  const blob = new Blob([header + rows], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'scan_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('CSVを保存しました（' + codes.length + '件）');
+}
+
+function beep() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.frequency.value = 880;
+  g.gain.setValueAtTime(0.3, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+  o.start(); o.stop(ctx.currentTime + 0.15);
+}
+
+document.getElementById('manual-input').addEventListener('keydown', e => { if(e.key==='Enter') manualAdd(); });
+updateList();
+</script>

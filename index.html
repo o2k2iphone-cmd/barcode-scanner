@@ -13,49 +13,58 @@
     --warn: #fbbf24; --text: #f0f0f0; --text2: #8b8fa8;
     --border: rgba(255,255,255,0.08); --radius: 12px;
   }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; -webkit-tap-highlight-color: transparent; }
-  #app { max-width: 420px; margin: 0 auto; padding: 1.25rem 1rem 2rem; min-height: 100vh; display: flex; flex-direction: column; gap: 1rem; }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; -webkit-tap-highlight-color: transparent; }
+  #app { max-width: 420px; margin: 0 auto; padding: 1rem 1rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
   header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
   .logo { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--accent); letter-spacing: 0.05em; }
   #count-badge { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--surface2); color: var(--accent2); padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(34,211,238,0.2); }
 
-  #camera-section { position: relative; width: 100%; background: #000; border-radius: var(--radius); overflow: hidden; display: none; border: 1px solid var(--border); }
-  #interactive { width: 100%; }
-  #interactive video { width: 100% !important; height: auto !important; display: block; }
+  /* カメラは高さを固定して画面を占領させない */
+  #camera-section {
+    position: relative;
+    width: 100%;
+    height: 240px; /* 固定高さ */
+    background: #000;
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: none;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #interactive { width: 100%; height: 100%; }
+  #interactive video { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
   #interactive canvas { display: none; }
 
   .scan-frame-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-  .scan-frame { position: relative; width: 260px; height: 140px; }
-  .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 28px; height: 28px; border-color: var(--accent); border-style: solid; }
+  .scan-frame { position: relative; width: 240px; height: 120px; }
+  .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--accent); border-style: solid; }
   .scan-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
   .scan-frame::after  { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
-  .corner-bl, .corner-br { position: absolute; width: 28px; height: 28px; border-color: var(--accent); border-style: solid; }
+  .corner-bl, .corner-br { position: absolute; width: 24px; height: 24px; border-color: var(--accent); border-style: solid; }
   .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
   .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
-  .scan-line { position: absolute; left: 16px; right: 16px; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 1.8s ease-in-out infinite; }
+  .scan-line { position: absolute; left: 12px; right: 12px; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 1.8s ease-in-out infinite; }
   .scan-line.paused { animation-play-state: paused; opacity: 0.3; }
-  @keyframes scanMove { 0% { top: 16px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 16px); opacity: 0; } }
+  @keyframes scanMove { 0% { top: 12px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 12px); opacity: 0; } }
 
-  /* 一時停止オーバーレイ */
-  #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10; }
+  #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; z-index: 10; }
   #pause-overlay.show { display: flex; }
-  .pause-text { color: #fff; font-size: 20px; font-weight: 500; letter-spacing: 0.1em; }
+  .pause-text { color: #fff; font-size: 18px; font-weight: 500; }
+  .scan-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(255,255,255,0.75); z-index: 5; }
 
-  .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.8); z-index: 5; }
-
-  #status-bar { font-size: 13px; color: var(--text2); text-align: center; padding: 8px; background: var(--surface); border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; }
-  #status-bar.ok  { color: var(--accent); }
-  #status-bar.err { color: var(--danger); }
-  #status-bar.dup { color: var(--warn); }
+  #status-bar { font-size: 13px; color: var(--text2); text-align: center; padding: 8px; background: var(--surface); border-radius: 8px; min-height: 36px; display: flex; align-items: center; justify-content: center; }
+  #status-bar.ok    { color: var(--accent); }
+  #status-bar.err   { color: var(--danger); }
+  #status-bar.dup   { color: var(--warn); }
   #status-bar.pause { color: var(--warn); }
 
-  .btn { width: 100%; padding: 14px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn { width: 100%; padding: 13px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn:active { opacity: 0.8; }
   .btn-scan   { background: var(--accent); color: #0f1117; border-color: var(--accent); }
   .btn-pause  { background: var(--surface2); border-color: var(--warn); color: var(--warn); }
   .btn-resume { background: var(--accent); color: #0f1117; border-color: var(--accent); }
   .btn-stop   { background: var(--surface2); border-color: var(--danger); color: var(--danger); }
-  .scan-controls { display: none; flex-direction: column; gap: 8px; }
+  .scan-controls { display: none; gap: 8px; }
   .scan-controls.show { display: flex; }
   .btn-row { display: flex; gap: 8px; }
   .btn-row .btn { flex: 1; font-size: 14px; padding: 12px 8px; }
@@ -63,21 +72,21 @@
   .btn-clear { border-color: rgba(248,113,113,0.3); color: var(--danger); }
 
   .manual-row { display: flex; gap: 8px; }
-  .manual-row input { flex: 1; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; font-family: 'IBM Plex Mono', monospace; outline: none; }
+  .manual-row input { flex: 1; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; font-family: 'IBM Plex Mono', monospace; outline: none; }
   .manual-row input:focus { border-color: rgba(74,222,128,0.4); }
-  .manual-row input::placeholder { color: var(--text2); font-family: 'Noto Sans JP', sans-serif; }
-  .manual-row button { padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
+  .manual-row input::placeholder { color: var(--text2); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; }
+  .manual-row button { padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
 
   .list-header { display: flex; justify-content: space-between; align-items: center; }
   .list-title { font-size: 13px; color: var(--text2); }
-  #code-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
-  .code-item { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; gap: 10px; animation: slideIn 0.2s ease; }
+  #code-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .code-item { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; gap: 10px; animation: slideIn 0.2s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
   .code-num  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); min-width: 20px; text-align: right; }
   .code-text { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--text); flex: 1; }
   .del-btn   { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; line-height: 1; padding: 0 2px; }
   .del-btn:active { color: var(--danger); }
-  #empty-state { text-align: center; color: var(--text2); font-size: 14px; padding: 2.5rem 0; }
+  #empty-state { text-align: center; color: var(--text2); font-size: 14px; padding: 2rem 0; }
   .divider { height: 1px; background: var(--border); }
 </style>
 </head>
@@ -88,7 +97,7 @@
     <div id="count-badge">0 件</div>
   </header>
 
-  <!-- カメラ -->
+  <!-- カメラ（固定高さ240px） -->
   <div id="camera-section">
     <div id="interactive"></div>
     <div class="scan-frame-overlay">
@@ -99,21 +108,19 @@
       </div>
     </div>
     <div id="pause-overlay"><span class="pause-text">⏸ 一時停止中</span></div>
-    <div class="scan-hint" id="scan-hint">バーコードを枠内に合わせてください</div>
+    <div class="scan-hint">バーコードを枠内に合わせてください</div>
   </div>
 
   <!-- ステータス -->
   <div id="status-bar">スキャンボタンを押して開始してください</div>
 
-  <!-- スキャン開始ボタン -->
+  <!-- スキャン開始 -->
   <button class="btn btn-scan" id="scan-btn" onclick="startScan()">📷 スキャン開始</button>
 
-  <!-- スキャン中のコントロール -->
-  <div class="scan-controls" id="scan-controls">
-    <div class="btn-row">
-      <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
-      <button class="btn btn-stop" onclick="stopScan()">⏹ 終了</button>
-    </div>
+  <!-- スキャン中コントロール（常に見える） -->
+  <div class="scan-controls btn-row" id="scan-controls">
+    <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
+    <button class="btn btn-stop"  onclick="stopScan()">⏹ 終了</button>
   </div>
 
   <div class="divider"></div>
@@ -126,7 +133,6 @@
 
   <div class="divider"></div>
 
-  <!-- リスト -->
   <div class="list-header">
     <span class="list-title">読み取りリスト</span>
   </div>
@@ -134,7 +140,6 @@
     <div id="empty-state">まだコードがありません</div>
   </div>
 
-  <!-- 下部ボタン -->
   <div class="btn-row">
     <button class="btn btn-clear" onclick="clearAll()">🗑 クリア</button>
     <button class="btn btn-csv"   onclick="downloadCSV()">⬇ CSV保存</button>
@@ -170,10 +175,10 @@ function updateList() {
 }
 
 function addCode(raw) {
-  if (paused) return; // 一時停止中は追加しない
+  if (paused) return;
   const code = String(raw).replace(/\D/g, '');
   if (code.length < 6) return;
-  if (codes.includes(code)) { setStatus('重複のためスキップ: ' + code, 'dup'); return; }
+  if (codes.includes(code)) { setStatus('重複スキップ: ' + code, 'dup'); return; }
   codes.push(code);
   updateList();
   setStatus('✓ 追加: ' + code, 'ok');
@@ -202,7 +207,7 @@ function togglePause() {
     btn.className = 'btn btn-resume';
     overlay.classList.add('show');
     scanLine.classList.add('paused');
-    setStatus('⏸ 一時停止中 — 再開ボタンで続けられます', 'pause');
+    setStatus('⏸ 一時停止中', 'pause');
   } else {
     btn.textContent = '⏸ 一時停止';
     btn.className = 'btn btn-pause';
@@ -232,7 +237,7 @@ function startScan() {
     locate: true
   }, function(err) {
     if (err) {
-      setStatus('カメラエラー: ' + (err.message || 'カメラを許可してください'), 'err');
+      setStatus('エラー: ' + (err.message || 'カメラを許可してください'), 'err');
       stopScan(); return;
     }
     Quagga.start();
@@ -246,17 +251,13 @@ function startScan() {
   Quagga.onDetected(function(result) {
     if (paused) return;
     const code = result.codeResult.code;
-    // 信頼度チェック：誤読み防止
     const err = result.codeResult.decodedCodes
-      .filter(x => x.error !== undefined)
-      .map(x => x.error);
+      .filter(x => x.error !== undefined).map(x => x.error);
     const avgErr = err.length ? err.reduce((a,b)=>a+b,0)/err.length : 1;
-    if (avgErr > 0.15) return; // 信頼度が低いものは無視
-
+    if (avgErr > 0.15) return;
     const now = Date.now();
     if (code !== lastCode || now - lastTime > 3000) {
-      lastCode = code;
-      lastTime = now;
+      lastCode = code; lastTime = now;
       addCode(code);
     }
   });

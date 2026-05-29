@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>バーコードスキャナー</title>
+
+<!-- ホーム画面アイコン用SVG（Base64埋め込み） -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iODAiIGZpbGw9IiMwZjFhMGYiLz4KPHJlY3QgeD0iOTYiIHk9IjE2MCIgd2lkdGg9IjMyMCIgaGVpZ2h0PSIyMzAiIHJ4PSIyOCIgZmlsbD0iIzFhMmUxYSIvPgo8cmVjdCB4PSI5NiIgeT0iMTYwIiB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIzMCIgcng9IjI4IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YWRlODAiIHN0cm9rZS13aWR0aD0iNiIvPgo8cmVjdCB4PSIxNzAiIHk9IjEyOCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSI0NCIgcng9IjE0IiBmaWxsPSIjMWEyZTFhIiBzdHJva2U9IiM0YWRlODAiIHN0cm9rZS13aWR0aD0iNiIvPgo8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNzUiIHI9IjcyIiBmaWxsPSIjMGYxYTBmIiBzdHJva2U9IiM0YWRlODAiIHN0cm9rZS13aWR0aD0iNiIvPgo8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNzUiIHI9IjUwIiBmaWxsPSIjMTUyNDE1IiBzdHJva2U9IiMyZDdhMmQiIHN0cm9rZS13aWR0aD0iMyIvPgo8cmVjdCB4PSIyMTYiIHk9IjI1MCIgd2lkdGg9IjUiIGhlaWdodD0iNTAiIHJ4PSIxIiBmaWxsPSIjNGFkZTgwIi8+CjxyZWN0IHg9IjIyNiIgeT0iMjUwIiB3aWR0aD0iMyIgaGVpZ2h0PSI1MCIgcng9IjEiIGZpbGw9IiM0YWRlODAiLz4KPHJlY3QgeD0iMjMzIiB5PSIyNTAiIHdpZHRoPSI2IiBoZWlnaHQ9IjUwIiByeD0iMSIgZmlsbD0iIzRhZGU4MCIvPgo8cmVjdCB4PSIyNDMiIHk9IjI1MCIgd2lkdGg9IjMiIGhlaWdodD0iNTAiIHJ4PSIxIiBmaWxsPSIjNGFkZTgwIi8+CjxyZWN0IHg9IjI1MCIgeT0iMjUwIiB3aWR0aD0iNSIgaGVpZ2h0PSI1MCIgcng9IjEiIGZpbGw9IiM0YWRlODAiLz4KPHJlY3QgeD0iMjU5IiB5PSIyNTAiIHdpZHRoPSIzIiBoZWlnaHQ9IjUwIiByeD0iMSIgZmlsbD0iIzRhZGU4MCIvPgo8cmVjdCB4PSIyNjYiIHk9IjI1MCIgd2lkdGg9IjYiIGhlaWdodD0iNTAiIHJ4PSIxIiBmaWxsPSIjNGFkZTgwIi8+CjxyZWN0IHg9IjI3NiIgeT0iMjUwIiB3aWR0aD0iMyIgaGVpZ2h0PSI1MCIgcng9IjEiIGZpbGw9IiM0YWRlODAiLz4KPHJlY3QgeD0iMjgzIiB5PSIyNTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjUwIiByeD0iMSIgZmlsbD0iIzRhZGU4MCIvPgo8cmVjdCB4PSIyMTAiIHk9IjI3NCIgd2lkdGg9Ijk4IiBoZWlnaHQ9IjMiIHJ4PSIxIiBmaWxsPSIjODZlZmFjIi8+CjxjaXJjbGUgY3g9IjM3MCIgY3k9IjE5MCIgcj0iMTYiIGZpbGw9IiMxYTJlMWEiIHN0cm9rZT0iIzRhZGU4MCIgc3Ryb2tlLXdpZHRoPSI0Ii8+CjxjaXJjbGUgY3g9IjM3MCIgY3k9IjE5MCIgcj0iNiIgZmlsbD0iIzRhZGU4MCIvPgo8L3N2Zz4=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="スキャナー">
+
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,18 +26,7 @@
   .logo { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--accent); letter-spacing: 0.05em; }
   #count-badge { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--surface2); color: var(--accent2); padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(34,211,238,0.2); }
 
-  /* カメラは高さを固定して画面を占領させない */
-  #camera-section {
-    position: relative;
-    width: 100%;
-    height: 240px; /* 固定高さ */
-    background: #000;
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: none;
-    border: 1px solid var(--border);
-    flex-shrink: 0;
-  }
+  #camera-section { position: relative; width: 100%; height: 240px; background: #000; border-radius: var(--radius); overflow: hidden; display: none; border: 1px solid var(--border); flex-shrink: 0; }
   #interactive { width: 100%; height: 100%; }
   #interactive video { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
   #interactive canvas { display: none; }
@@ -97,7 +93,6 @@
     <div id="count-badge">0 件</div>
   </header>
 
-  <!-- カメラ（固定高さ240px） -->
   <div id="camera-section">
     <div id="interactive"></div>
     <div class="scan-frame-overlay">
@@ -111,13 +106,10 @@
     <div class="scan-hint">バーコードを枠内に合わせてください</div>
   </div>
 
-  <!-- ステータス -->
   <div id="status-bar">スキャンボタンを押して開始してください</div>
 
-  <!-- スキャン開始 -->
   <button class="btn btn-scan" id="scan-btn" onclick="startScan()">📷 スキャン開始</button>
 
-  <!-- スキャン中コントロール（常に見える） -->
   <div class="scan-controls btn-row" id="scan-controls">
     <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
     <button class="btn btn-stop"  onclick="stopScan()">⏹ 終了</button>
@@ -125,7 +117,6 @@
 
   <div class="divider"></div>
 
-  <!-- 手動入力 -->
   <div class="manual-row">
     <input id="manual-input" type="tel" placeholder="手動入力（バーコード番号）" />
     <button onclick="manualAdd()">＋ 追加</button>
@@ -148,121 +139,81 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-let codes = [];
-let scanning = false;
-let paused = false;
+let codes = [], scanning = false, paused = false;
 
 function setStatus(msg, type='') {
   const el = document.getElementById('status-bar');
-  el.textContent = msg;
-  el.className = type;
+  el.textContent = msg; el.className = type;
 }
-
 function updateList() {
   const list = document.getElementById('code-list');
   document.getElementById('count-badge').textContent = codes.length + ' 件';
-  if (codes.length === 0) {
-    list.innerHTML = '<div id="empty-state">まだコードがありません</div>';
-    return;
-  }
+  if (codes.length === 0) { list.innerHTML = '<div id="empty-state">まだコードがありません</div>'; return; }
   list.innerHTML = codes.map((c, i) => `
     <div class="code-item">
       <span class="code-num">${i+1}</span>
       <span class="code-text">${c}</span>
       <button class="del-btn" onclick="removeCode(${i})">×</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function addCode(raw) {
   if (paused) return;
   const code = String(raw).replace(/\D/g, '');
   if (code.length < 6) return;
   if (codes.includes(code)) { setStatus('重複スキップ: ' + code, 'dup'); return; }
-  codes.push(code);
-  updateList();
-  setStatus('✓ 追加: ' + code, 'ok');
-  beep();
+  codes.push(code); updateList(); setStatus('✓ 追加: ' + code, 'ok'); beep();
 }
-
 function removeCode(i) { codes.splice(i, 1); updateList(); }
-
 function clearAll() {
   if (codes.length === 0) return;
   if (confirm('リストをすべてクリアしますか？')) { codes = []; updateList(); setStatus('クリアしました'); }
 }
-
 function manualAdd() {
   const input = document.getElementById('manual-input');
   if (input.value.trim()) { addCode(input.value.trim()); input.value = ''; }
 }
-
 function togglePause() {
   paused = !paused;
   const btn = document.getElementById('pause-btn');
   const overlay = document.getElementById('pause-overlay');
   const scanLine = document.getElementById('scan-line');
   if (paused) {
-    btn.textContent = '▶ 再開';
-    btn.className = 'btn btn-resume';
-    overlay.classList.add('show');
-    scanLine.classList.add('paused');
+    btn.textContent = '▶ 再開'; btn.className = 'btn btn-resume';
+    overlay.classList.add('show'); scanLine.classList.add('paused');
     setStatus('⏸ 一時停止中', 'pause');
   } else {
-    btn.textContent = '⏸ 一時停止';
-    btn.className = 'btn btn-pause';
-    overlay.classList.remove('show');
-    scanLine.classList.remove('paused');
+    btn.textContent = '⏸ 一時停止'; btn.className = 'btn btn-pause';
+    overlay.classList.remove('show'); scanLine.classList.remove('paused');
     setStatus('バーコードを枠内に合わせてください');
   }
 }
-
 function startScan() {
   setStatus('カメラを起動中...');
   document.getElementById('camera-section').style.display = 'block';
   document.getElementById('scan-btn').style.display = 'none';
   document.getElementById('scan-controls').classList.add('show');
   paused = false;
-
   Quagga.init({
-    inputStream: {
-      name: 'Live',
-      type: 'LiveStream',
-      target: document.getElementById('interactive'),
-      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    },
-    decoder: {
-      readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader']
-    },
+    inputStream: { name: 'Live', type: 'LiveStream', target: document.getElementById('interactive'),
+      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+    decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'] },
     locate: true
   }, function(err) {
-    if (err) {
-      setStatus('エラー: ' + (err.message || 'カメラを許可してください'), 'err');
-      stopScan(); return;
-    }
-    Quagga.start();
-    scanning = true;
-    setStatus('バーコードを枠内に合わせてください');
+    if (err) { setStatus('エラー: ' + (err.message || 'カメラを許可してください'), 'err'); stopScan(); return; }
+    Quagga.start(); scanning = true; setStatus('バーコードを枠内に合わせてください');
   });
-
-  let lastCode = '';
-  let lastTime = 0;
+  let lastCode = '', lastTime = 0;
   Quagga.offDetected();
   Quagga.onDetected(function(result) {
     if (paused) return;
     const code = result.codeResult.code;
-    const err = result.codeResult.decodedCodes
-      .filter(x => x.error !== undefined).map(x => x.error);
+    const err = result.codeResult.decodedCodes.filter(x => x.error !== undefined).map(x => x.error);
     const avgErr = err.length ? err.reduce((a,b)=>a+b,0)/err.length : 1;
     if (avgErr > 0.15) return;
     const now = Date.now();
-    if (code !== lastCode || now - lastTime > 3000) {
-      lastCode = code; lastTime = now;
-      addCode(code);
-    }
+    if (code !== lastCode || now - lastTime > 3000) { lastCode = code; lastTime = now; addCode(code); }
   });
 }
-
 function stopScan() {
   if (scanning) { try { Quagga.stop(); } catch(e) {} scanning = false; }
   paused = false;
@@ -272,7 +223,6 @@ function stopScan() {
   document.getElementById('pause-overlay').classList.remove('show');
   setStatus('スキャンを終了しました');
 }
-
 function downloadCSV() {
   if (codes.length === 0) { alert('コードがありません'); return; }
   const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
@@ -285,12 +235,10 @@ function downloadCSV() {
   document.body.removeChild(a); URL.revokeObjectURL(url);
   setStatus('CSVを保存しました（' + codes.length + '件）', 'ok');
 }
-
 function beep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
+    const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
     o.frequency.value = 1200; o.type = 'sine';
     g.gain.setValueAtTime(0.25, ctx.currentTime);
@@ -298,11 +246,7 @@ function beep() {
     o.start(); o.stop(ctx.currentTime + 0.12);
   } catch(e) {}
 }
-
-document.getElementById('manual-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') manualAdd();
-});
-
+document.getElementById('manual-input').addEventListener('keydown', e => { if (e.key === 'Enter') manualAdd(); });
 updateList();
 </script>
 </body>

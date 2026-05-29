@@ -33,21 +33,33 @@
   .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
   .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
   .scan-line { position: absolute; left: 16px; right: 16px; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 1.8s ease-in-out infinite; }
+  .scan-line.paused { animation-play-state: paused; opacity: 0.3; }
   @keyframes scanMove { 0% { top: 16px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 16px); opacity: 0; } }
-  .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.8); }
+
+  /* 一時停止オーバーレイ */
+  #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10; }
+  #pause-overlay.show { display: flex; }
+  .pause-text { color: #fff; font-size: 20px; font-weight: 500; letter-spacing: 0.1em; }
+
+  .scan-hint { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,0.8); z-index: 5; }
 
   #status-bar { font-size: 13px; color: var(--text2); text-align: center; padding: 8px; background: var(--surface); border-radius: 8px; min-height: 38px; display: flex; align-items: center; justify-content: center; }
   #status-bar.ok  { color: var(--accent); }
   #status-bar.err { color: var(--danger); }
   #status-bar.dup { color: var(--warn); }
+  #status-bar.pause { color: var(--warn); }
 
   .btn { width: 100%; padding: 14px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn:active { opacity: 0.8; }
-  .btn-scan { background: var(--accent); color: #0f1117; border-color: var(--accent); }
-  .btn-stop { background: var(--surface2); border-color: var(--danger); color: var(--danger); }
+  .btn-scan   { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+  .btn-pause  { background: var(--surface2); border-color: var(--warn); color: var(--warn); }
+  .btn-resume { background: var(--accent); color: #0f1117; border-color: var(--accent); }
+  .btn-stop   { background: var(--surface2); border-color: var(--danger); color: var(--danger); }
+  .scan-controls { display: none; flex-direction: column; gap: 8px; }
+  .scan-controls.show { display: flex; }
   .btn-row { display: flex; gap: 8px; }
   .btn-row .btn { flex: 1; font-size: 14px; padding: 12px 8px; }
-  .btn-csv { border-color: rgba(34,211,238,0.3); color: var(--accent2); }
+  .btn-csv   { border-color: rgba(34,211,238,0.3); color: var(--accent2); }
   .btn-clear { border-color: rgba(248,113,113,0.3); color: var(--danger); }
 
   .manual-row { display: flex; gap: 8px; }
@@ -58,12 +70,12 @@
 
   .list-header { display: flex; justify-content: space-between; align-items: center; }
   .list-title { font-size: 13px; color: var(--text2); }
-  #code-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+  #code-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
   .code-item { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; gap: 10px; animation: slideIn 0.2s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  .code-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); min-width: 20px; text-align: right; }
+  .code-num  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); min-width: 20px; text-align: right; }
   .code-text { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--text); flex: 1; }
-  .del-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; line-height: 1; padding: 0 2px; }
+  .del-btn   { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; line-height: 1; padding: 0 2px; }
   .del-btn:active { color: var(--danger); }
   #empty-state { text-align: center; color: var(--text2); font-size: 14px; padding: 2.5rem 0; }
   .divider { height: 1px; background: var(--border); }
@@ -76,25 +88,37 @@
     <div id="count-badge">0 件</div>
   </header>
 
+  <!-- カメラ -->
   <div id="camera-section">
     <div id="interactive"></div>
     <div class="scan-frame-overlay">
       <div class="scan-frame">
         <div class="corner-bl"></div>
         <div class="corner-br"></div>
-        <div class="scan-line"></div>
+        <div class="scan-line" id="scan-line"></div>
       </div>
     </div>
-    <div class="scan-hint">バーコードを枠内に合わせてください</div>
+    <div id="pause-overlay"><span class="pause-text">⏸ 一時停止中</span></div>
+    <div class="scan-hint" id="scan-hint">バーコードを枠内に合わせてください</div>
   </div>
 
+  <!-- ステータス -->
   <div id="status-bar">スキャンボタンを押して開始してください</div>
 
+  <!-- スキャン開始ボタン -->
   <button class="btn btn-scan" id="scan-btn" onclick="startScan()">📷 スキャン開始</button>
-  <button class="btn btn-stop" id="stop-btn" onclick="stopScan()" style="display:none">⏹ スキャン停止</button>
+
+  <!-- スキャン中のコントロール -->
+  <div class="scan-controls" id="scan-controls">
+    <div class="btn-row">
+      <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
+      <button class="btn btn-stop" onclick="stopScan()">⏹ 終了</button>
+    </div>
+  </div>
 
   <div class="divider"></div>
 
+  <!-- 手動入力 -->
   <div class="manual-row">
     <input id="manual-input" type="tel" placeholder="手動入力（バーコード番号）" />
     <button onclick="manualAdd()">＋ 追加</button>
@@ -102,14 +126,15 @@
 
   <div class="divider"></div>
 
+  <!-- リスト -->
   <div class="list-header">
     <span class="list-title">読み取りリスト</span>
   </div>
-
   <div id="code-list">
     <div id="empty-state">まだコードがありません</div>
   </div>
 
+  <!-- 下部ボタン -->
   <div class="btn-row">
     <button class="btn btn-clear" onclick="clearAll()">🗑 クリア</button>
     <button class="btn btn-csv"   onclick="downloadCSV()">⬇ CSV保存</button>
@@ -120,11 +145,12 @@
 <script>
 let codes = [];
 let scanning = false;
+let paused = false;
 
 function setStatus(msg, type='') {
   const el = document.getElementById('status-bar');
   el.textContent = msg;
-  el.className = type ? type : '';
+  el.className = type;
 }
 
 function updateList() {
@@ -144,12 +170,13 @@ function updateList() {
 }
 
 function addCode(raw) {
+  if (paused) return; // 一時停止中は追加しない
   const code = String(raw).replace(/\D/g, '');
-  if (code.length < 6) { setStatus('短すぎます: ' + raw, 'err'); return; }
-  if (codes.includes(code)) { setStatus('重複: ' + code, 'dup'); return; }
+  if (code.length < 6) return;
+  if (codes.includes(code)) { setStatus('重複のためスキップ: ' + code, 'dup'); return; }
   codes.push(code);
   updateList();
-  setStatus('追加: ' + code, 'ok');
+  setStatus('✓ 追加: ' + code, 'ok');
   beep();
 }
 
@@ -165,32 +192,48 @@ function manualAdd() {
   if (input.value.trim()) { addCode(input.value.trim()); input.value = ''; }
 }
 
+function togglePause() {
+  paused = !paused;
+  const btn = document.getElementById('pause-btn');
+  const overlay = document.getElementById('pause-overlay');
+  const scanLine = document.getElementById('scan-line');
+  if (paused) {
+    btn.textContent = '▶ 再開';
+    btn.className = 'btn btn-resume';
+    overlay.classList.add('show');
+    scanLine.classList.add('paused');
+    setStatus('⏸ 一時停止中 — 再開ボタンで続けられます', 'pause');
+  } else {
+    btn.textContent = '⏸ 一時停止';
+    btn.className = 'btn btn-pause';
+    overlay.classList.remove('show');
+    scanLine.classList.remove('paused');
+    setStatus('バーコードを枠内に合わせてください');
+  }
+}
+
 function startScan() {
   setStatus('カメラを起動中...');
   document.getElementById('camera-section').style.display = 'block';
   document.getElementById('scan-btn').style.display = 'none';
-  document.getElementById('stop-btn').style.display = 'block';
+  document.getElementById('scan-controls').classList.add('show');
+  paused = false;
 
   Quagga.init({
     inputStream: {
       name: 'Live',
       type: 'LiveStream',
       target: document.getElementById('interactive'),
-      constraints: {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
+      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
     },
     decoder: {
-      readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'code_39_reader', 'upc_reader']
+      readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader']
     },
     locate: true
   }, function(err) {
     if (err) {
       setStatus('カメラエラー: ' + (err.message || 'カメラを許可してください'), 'err');
-      stopScan();
-      return;
+      stopScan(); return;
     }
     Quagga.start();
     scanning = true;
@@ -201,9 +244,17 @@ function startScan() {
   let lastTime = 0;
   Quagga.offDetected();
   Quagga.onDetected(function(result) {
+    if (paused) return;
     const code = result.codeResult.code;
+    // 信頼度チェック：誤読み防止
+    const err = result.codeResult.decodedCodes
+      .filter(x => x.error !== undefined)
+      .map(x => x.error);
+    const avgErr = err.length ? err.reduce((a,b)=>a+b,0)/err.length : 1;
+    if (avgErr > 0.15) return; // 信頼度が低いものは無視
+
     const now = Date.now();
-    if (code !== lastCode || now - lastTime > 2500) {
+    if (code !== lastCode || now - lastTime > 3000) {
       lastCode = code;
       lastTime = now;
       addCode(code);
@@ -213,10 +264,12 @@ function startScan() {
 
 function stopScan() {
   if (scanning) { try { Quagga.stop(); } catch(e) {} scanning = false; }
+  paused = false;
   document.getElementById('camera-section').style.display = 'none';
   document.getElementById('scan-btn').style.display = 'block';
-  document.getElementById('stop-btn').style.display = 'none';
-  setStatus('スキャンを停止しました');
+  document.getElementById('scan-controls').classList.remove('show');
+  document.getElementById('pause-overlay').classList.remove('show');
+  setStatus('スキャンを終了しました');
 }
 
 function downloadCSV() {

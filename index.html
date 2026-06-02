@@ -4,13 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>バーコードスキャナー</title>
-
-<!-- ホーム画面アイコン用SVG（Base64埋め込み） -->
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="スキャナー">
-
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,16 +18,17 @@
     --border: rgba(255,255,255,0.08); --radius: 12px;
   }
   html, body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 15px; -webkit-tap-highlight-color: transparent; }
-  #app { max-width: 420px; margin: 0 auto; padding: 1rem 1rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
+  #app { max-width: 480px; margin: 0 auto; padding: 1rem 1rem 2rem; display: flex; flex-direction: column; gap: 0.85rem; }
+
   header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
   .logo { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--accent); letter-spacing: 0.05em; }
   #count-badge { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: var(--surface2); color: var(--accent2); padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(34,211,238,0.2); }
 
+  /* カメラ */
   #camera-section { position: relative; width: 100%; height: 240px; background: #000; border-radius: var(--radius); overflow: hidden; display: none; border: 1px solid var(--border); flex-shrink: 0; }
   #interactive { width: 100%; height: 100%; }
   #interactive video { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
   #interactive canvas { display: none; }
-
   .scan-frame-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   .scan-frame { position: relative; width: 240px; height: 120px; }
   .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--accent); border-style: solid; }
@@ -42,18 +40,19 @@
   .scan-line { position: absolute; left: 12px; right: 12px; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: scanMove 1.8s ease-in-out infinite; }
   .scan-line.paused { animation-play-state: paused; opacity: 0.3; }
   @keyframes scanMove { 0% { top: 12px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 12px); opacity: 0; } }
-
   #pause-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; z-index: 10; }
   #pause-overlay.show { display: flex; }
   .pause-text { color: #fff; font-size: 18px; font-weight: 500; }
   .scan-hint { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(255,255,255,0.75); z-index: 5; }
 
+  /* ステータス */
   #status-bar { font-size: 13px; color: var(--text2); text-align: center; padding: 8px; background: var(--surface); border-radius: 8px; min-height: 36px; display: flex; align-items: center; justify-content: center; }
   #status-bar.ok    { color: var(--accent); }
   #status-bar.err   { color: var(--danger); }
   #status-bar.dup   { color: var(--warn); }
   #status-bar.pause { color: var(--warn); }
 
+  /* ボタン */
   .btn { width: 100%; padding: 13px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 15px; font-family: 'Noto Sans JP', sans-serif; font-weight: 500; cursor: pointer; background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
   .btn:active { opacity: 0.8; }
   .btn-scan   { background: var(--accent); color: #0f1117; border-color: var(--accent); }
@@ -67,21 +66,55 @@
   .btn-csv   { border-color: rgba(34,211,238,0.3); color: var(--accent2); }
   .btn-clear { border-color: rgba(248,113,113,0.3); color: var(--danger); }
 
+  /* 手動入力 */
   .manual-row { display: flex; gap: 8px; }
   .manual-row input { flex: 1; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; font-family: 'IBM Plex Mono', monospace; outline: none; }
   .manual-row input:focus { border-color: rgba(74,222,128,0.4); }
   .manual-row input::placeholder { color: var(--text2); font-family: 'Noto Sans JP', sans-serif; font-size: 13px; }
   .manual-row button { padding: 11px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; cursor: pointer; white-space: nowrap; font-family: 'Noto Sans JP', sans-serif; }
 
+  /* リスト */
   .list-header { display: flex; justify-content: space-between; align-items: center; }
   .list-title { font-size: 13px; color: var(--text2); }
-  #code-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
-  .code-item { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; gap: 10px; animation: slideIn 0.2s ease; }
+
+  #code-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+  #code-list::-webkit-scrollbar { width: 4px; }
+  #code-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 2px; }
+
+  /* コードアイテム */
+  .code-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; animation: slideIn 0.2s ease; }
   @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  .code-num  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); min-width: 20px; text-align: right; }
+
+  .code-item-top { display: flex; align-items: center; gap: 8px; }
+  .code-num  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text2); min-width: 20px; text-align: right; flex-shrink: 0; }
   .code-text { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--text); flex: 1; }
-  .del-btn   { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; line-height: 1; padding: 0 2px; }
+  .del-btn   { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
   .del-btn:active { color: var(--danger); }
+
+  /* コメント欄エリア */
+  .comment-area { display: flex; flex-direction: column; gap: 6px; padding-left: 28px; }
+  .comment-row { display: flex; align-items: center; gap: 6px; }
+  .comment-label { font-size: 11px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+
+  .comment-input {
+    flex: 1;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, opacity 0.2s;
+  }
+  .comment-input:focus { border-color: rgba(74,222,128,0.4); }
+  .comment-input::placeholder { color: var(--text2); font-size: 12px; }
+
+  /* コメント2は最初は非表示 */
+  .comment-row2 { display: none; }
+  .comment-row2.show { display: flex; }
+
   #empty-state { text-align: center; color: var(--text2); font-size: 14px; padding: 2rem 0; }
   .divider { height: 1px; background: var(--border); }
 </style>
@@ -109,10 +142,9 @@
   <div id="status-bar">スキャンボタンを押して開始してください</div>
 
   <button class="btn btn-scan" id="scan-btn" onclick="startScan()">📷 スキャン開始</button>
-
   <div class="scan-controls btn-row" id="scan-controls">
     <button class="btn btn-pause" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
-    <button class="btn btn-stop"  onclick="stopScan()">⏹ 終了</button>
+    <button class="btn btn-stop" onclick="stopScan()">⏹ 終了</button>
   </div>
 
   <div class="divider"></div>
@@ -127,81 +159,191 @@
   <div class="list-header">
     <span class="list-title">読み取りリスト</span>
   </div>
+
   <div id="code-list">
     <div id="empty-state">まだコードがありません</div>
   </div>
 
   <div class="btn-row">
     <button class="btn btn-clear" onclick="clearAll()">🗑 クリア</button>
-    <button class="btn btn-csv"   onclick="downloadCSV()">⬇ CSV保存</button>
+    <button class="btn btn-csv" onclick="downloadCSV()">⬇ CSV保存</button>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 <script>
-let codes = [], scanning = false, paused = false;
+// データ構造: [{code, comment1, comment2}]
+let items = [];
+let scanning = false;
+let paused = false;
 
 function setStatus(msg, type='') {
   const el = document.getElementById('status-bar');
-  el.textContent = msg; el.className = type;
+  el.textContent = msg;
+  el.className = type;
 }
+
 function updateList() {
   const list = document.getElementById('code-list');
-  document.getElementById('count-badge').textContent = codes.length + ' 件';
-  if (codes.length === 0) { list.innerHTML = '<div id="empty-state">まだコードがありません</div>'; return; }
-  list.innerHTML = codes.map((c, i) => `
-    <div class="code-item">
-      <span class="code-num">${i+1}</span>
-      <span class="code-text">${c}</span>
-      <button class="del-btn" onclick="removeCode(${i})">×</button>
-    </div>`).join('');
+  document.getElementById('count-badge').textContent = items.length + ' 件';
+
+  if (items.length === 0) {
+    list.innerHTML = '<div id="empty-state">まだコードがありません</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((item, i) => `
+    <div class="code-item" id="item-${i}">
+      <div class="code-item-top">
+        <span class="code-num">${i + 1}</span>
+        <span class="code-text">${item.code}</span>
+        <button class="del-btn" onclick="removeItem(${i})">×</button>
+      </div>
+      <div class="comment-area">
+        <div class="comment-row">
+          <span class="comment-label">memo1</span>
+          <input
+            class="comment-input"
+            type="text"
+            placeholder="コメント・メモを入力（任意）"
+            value="${escHtml(item.comment1)}"
+            oninput="onComment1Input(${i}, this.value)"
+            onfocus="onComment1Focus(${i})"
+          />
+        </div>
+        <div class="comment-row2 ${item.comment1 ? 'show' : ''}" id="comment2-row-${i}">
+          <span class="comment-label">memo2</span>
+          <input
+            class="comment-input"
+            type="text"
+            placeholder="追加メモ（任意）"
+            value="${escHtml(item.comment2)}"
+            oninput="onComment2Input(${i}, this.value)"
+          />
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function onComment1Input(i, val) {
+  items[i].comment1 = val;
+  // コメント2の表示切り替え
+  const row2 = document.getElementById(`comment2-row-${i}`);
+  if (row2) {
+    if (val.trim() !== '') {
+      row2.classList.add('show');
+    } else {
+      row2.classList.remove('show');
+      items[i].comment2 = ''; // コメント1が空になったらコメント2もクリア
+    }
+  }
+}
+
+function onComment1Focus(i) {
+  // フォーカス時にも表示チェック
+  const row2 = document.getElementById(`comment2-row-${i}`);
+  if (row2 && items[i].comment1.trim() !== '') {
+    row2.classList.add('show');
+  }
+}
+
+function onComment2Input(i, val) {
+  items[i].comment2 = val;
+}
+
 function addCode(raw) {
   if (paused) return;
   const code = String(raw).replace(/\D/g, '');
   if (code.length < 6) return;
-  if (codes.includes(code)) { setStatus('重複スキップ: ' + code, 'dup'); return; }
-  codes.push(code); updateList(); setStatus('✓ 追加: ' + code, 'ok'); beep();
+  if (items.find(item => item.code === code)) {
+    setStatus('重複スキップ: ' + code, 'dup');
+    return;
+  }
+  items.push({ code, comment1: '', comment2: '' });
+  updateList();
+  setStatus('✓ 追加: ' + code, 'ok');
+  beep();
+
+  // 最新アイテムのコメント欄にフォーカス（任意）
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.comment-input');
+    if (inputs.length > 0) {
+      // 最後のアイテムのコメント1にフォーカス
+      const lastInputs = document.querySelectorAll(`#item-${items.length - 1} .comment-input`);
+      if (lastInputs.length > 0) lastInputs[0].focus();
+    }
+  }, 100);
 }
-function removeCode(i) { codes.splice(i, 1); updateList(); }
+
+function removeItem(i) {
+  items.splice(i, 1);
+  updateList();
+}
+
 function clearAll() {
-  if (codes.length === 0) return;
-  if (confirm('リストをすべてクリアしますか？')) { codes = []; updateList(); setStatus('クリアしました'); }
+  if (items.length === 0) return;
+  if (confirm('リストをすべてクリアしますか？')) {
+    items = [];
+    updateList();
+    setStatus('クリアしました');
+  }
 }
+
 function manualAdd() {
   const input = document.getElementById('manual-input');
-  if (input.value.trim()) { addCode(input.value.trim()); input.value = ''; }
+  if (input.value.trim()) {
+    addCode(input.value.trim());
+    input.value = '';
+  }
 }
+
 function togglePause() {
   paused = !paused;
   const btn = document.getElementById('pause-btn');
   const overlay = document.getElementById('pause-overlay');
   const scanLine = document.getElementById('scan-line');
   if (paused) {
-    btn.textContent = '▶ 再開'; btn.className = 'btn btn-resume';
-    overlay.classList.add('show'); scanLine.classList.add('paused');
+    btn.textContent = '▶ 再開';
+    btn.className = 'btn btn-resume';
+    overlay.classList.add('show');
+    scanLine.classList.add('paused');
     setStatus('⏸ 一時停止中', 'pause');
   } else {
-    btn.textContent = '⏸ 一時停止'; btn.className = 'btn btn-pause';
-    overlay.classList.remove('show'); scanLine.classList.remove('paused');
+    btn.textContent = '⏸ 一時停止';
+    btn.className = 'btn btn-pause';
+    overlay.classList.remove('show');
+    scanLine.classList.remove('paused');
     setStatus('バーコードを枠内に合わせてください');
   }
 }
+
 function startScan() {
   setStatus('カメラを起動中...');
   document.getElementById('camera-section').style.display = 'block';
   document.getElementById('scan-btn').style.display = 'none';
   document.getElementById('scan-controls').classList.add('show');
   paused = false;
+
   Quagga.init({
-    inputStream: { name: 'Live', type: 'LiveStream', target: document.getElementById('interactive'),
-      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+    inputStream: {
+      name: 'Live', type: 'LiveStream',
+      target: document.getElementById('interactive'),
+      constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    },
     decoder: { readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'] },
     locate: true
   }, function(err) {
     if (err) { setStatus('エラー: ' + (err.message || 'カメラを許可してください'), 'err'); stopScan(); return; }
-    Quagga.start(); scanning = true; setStatus('バーコードを枠内に合わせてください');
+    Quagga.start();
+    scanning = true;
+    setStatus('バーコードを枠内に合わせてください');
   });
+
   let lastCode = '', lastTime = 0;
   Quagga.offDetected();
   Quagga.onDetected(function(result) {
@@ -211,9 +353,13 @@ function startScan() {
     const avgErr = err.length ? err.reduce((a,b)=>a+b,0)/err.length : 1;
     if (avgErr > 0.15) return;
     const now = Date.now();
-    if (code !== lastCode || now - lastTime > 3000) { lastCode = code; lastTime = now; addCode(code); }
+    if (code !== lastCode || now - lastTime > 3000) {
+      lastCode = code; lastTime = now;
+      addCode(code);
+    }
   });
 }
+
 function stopScan() {
   if (scanning) { try { Quagga.stop(); } catch(e) {} scanning = false; }
   paused = false;
@@ -223,18 +369,23 @@ function stopScan() {
   document.getElementById('pause-overlay').classList.remove('show');
   setStatus('スキャンを終了しました');
 }
+
 function downloadCSV() {
-  if (codes.length === 0) { alert('コードがありません'); return; }
+  if (items.length === 0) { alert('コードがありません'); return; }
   const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  const csv = '\uFEFF商品コード\n' + codes.join('\n');
-  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const rows = items.map(item =>
+    [item.code, item.comment1, item.comment2].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')
+  );
+  const csv = '\uFEFF商品コード,メモ1,メモ2\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'scan_' + today + '.csv';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
-  setStatus('CSVを保存しました（' + codes.length + '件）', 'ok');
+  setStatus('CSVを保存しました（' + items.length + '件）', 'ok');
 }
+
 function beep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -246,7 +397,11 @@ function beep() {
     o.start(); o.stop(ctx.currentTime + 0.12);
   } catch(e) {}
 }
-document.getElementById('manual-input').addEventListener('keydown', e => { if (e.key === 'Enter') manualAdd(); });
+
+document.getElementById('manual-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') manualAdd();
+});
+
 updateList();
 </script>
 </body>
